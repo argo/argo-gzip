@@ -1,0 +1,17 @@
+{
+  "name": "argo-gzip",
+  "version": "0.0.1",
+  "description": "Gzip package for Argo",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "",
+  "keywords": [
+    "argo",
+    "gzip",
+    "http"
+  ],
+  "author": "mdobs",
+  "license": "BSD"
+}
