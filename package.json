@@ -4,9 +4,9 @@
   "description": "Gzip package for Argo",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node_modules/.bin/mocha -R spec"
   },
-  "repository": "",
+  "repository": "https://github.com/mdobson/argo-gzip",
   "keywords": [
     "argo",
     "gzip",
@@ -15,6 +15,10 @@
   "dependencies": {
     "argo":"0.2.1"
   },
-  "author": "mdobs",
+  "devDependencies": {
+    "mocha": "~1.8.1"
+  },
+  "readmeFilename": "README.md",
+  "author": "Matthew Dobson <mdobson4@gmail.com>",
   "license": "BSD"
 }
