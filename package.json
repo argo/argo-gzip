@@ -12,6 +12,9 @@
     "gzip",
     "http"
   ],
+  "dependencies": {
+    "argo":"0.2.1"
+  },
   "author": "mdobs",
   "license": "BSD"
 }
