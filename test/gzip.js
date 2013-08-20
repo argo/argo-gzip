@@ -31,6 +31,8 @@ function _getEnv() {
   };
 }
 
+//TESTS
+
 describe("argo-gzip", function(){
 	it("has a name and install property", function(){
 		var server = argo();
