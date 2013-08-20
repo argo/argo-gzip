@@ -52,7 +52,7 @@ var zipPackage = module.exports = function(argo) {
       var serverRequestProto = argo._http.IncomingMessage.prototype;
       if(serverRequestProto._argoModified) {
         serverRequestProto._gzipModified = "request";
-        serverResponseProto._deflatedResponse = false;
+        serverRequestProto._deflatedResponse = false;
         var getRequestBodyFunc = serverRequestProto.getBody;
         serverRequestProto.getBody = function(cb) {      
           var self = this;
@@ -87,6 +87,37 @@ var zipPackage = module.exports = function(argo) {
 
       if(serverResponseProto._argoModified) {
         serverResponseProto._gzipModified = "response";
+        serverResponseProto._deflatedResponse = false;
+        var getRequestBodyFunc = serverResponseProto.getBody;
+        serverResponseProto.getBody = function(cb) {      
+          var self = this;
+          
+          getRequestBodyFunc.call(this, function(error, body){
+            if(!body) {
+                cb(null, body)
+            }
+
+            if("content-encoding" in self.headers) {
+              var encoding;
+              encoding = self.headers["content-encoding"]
+              
+              if (encoding.indexOf('gzip') !== -1) {
+                zlib.gunzip(body, function(error, result){
+                  if(error) {
+                    cb(error);
+                  } else {
+                    serverResponseProto._deflatedResponse = true;
+                    cb(null, result);
+                  }
+                });
+              } else {
+                cb(null, body);
+              }
+            } else {
+              cb(null, body);
+            }
+          });
+        }
       }
       
     }
