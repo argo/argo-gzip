@@ -9,7 +9,7 @@ Usage.
 	    gzip = require("argo-gzip");
 
 	argo()
-		.use(gzip)
+		.use({package:gzip})
 		.target("http://www.endpointAPI.com/");
 
 //Now all request that come in with a "Accept-Encoding:gzip" header will be zipped as a response.
