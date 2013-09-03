@@ -113,8 +113,6 @@ var zipPackage = module.exports = function(argo) {
                   r.body = error;
                   next(env);
                 } else {
-                  var zip = zlib.createGzip();
-
                   zlib.gzip(body, function(error, zippedBuffer){
                     if(error) {
                       r.statusCode = 500;

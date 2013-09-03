@@ -126,4 +126,55 @@ describe("argo-gzip", function(){
   	      env.target.response.emit('end');
   	    });
     });
+
+    it('serves uncompressed responses without the header sent', function(done) {
+      var env = _getEnv();
+      env.request = new Request();
+      env.request.url = '/hello';
+      env.request.method = 'GET';
+      env.response = new Response();
+
+      env.response.end = function(body) {
+        assert.equal('application/json; charset=UTF-8', env.response.getHeader('Content-Type'));
+        assert.equal('{"hello":"World"}', body);
+        done();
+      };
+
+      argo()
+        .include({package:argo_gzip})
+        .get('/hello', function(handle) {
+          handle('request', function(env, next) {
+            env.response.statusCode = 200;
+            env.response.body = { hello: 'World' };
+            next(env);
+          });
+        })
+        .call(env);
+    });
+
+    it('serves uncompressed responses without the header sent', function(done) {
+      var env = _getEnv();
+      env.request = new Request();
+      env.request.setHeader("accept-encoding", "gzip");
+      env.request.url = '/hello';
+      env.request.method = 'GET';
+      env.response = new Response();
+
+      env.response.end = function(body) {
+        assert.equal('application/json; charset=UTF-8', env.response.getHeader('Content-Type'));
+        assert.equal('{"hello":"World"}', body);
+        done();
+      };
+
+      argo()
+        .include({package:argo_gzip})
+        .get('/hello', function(handle) {
+          handle('request', function(env, next) {
+            env.response.statusCode = 200;
+            env.response.body = { hello: 'World' };
+            next(env);
+          });
+        })
+        .call(env);
+    });
 });
