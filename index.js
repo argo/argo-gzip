@@ -58,10 +58,11 @@ var zipPackage = module.exports = function(argo) {
 
           if(res._argoModified) {
             res._gzipModified = "response";
-            res._deflatedResponse = false;
+            res._deflatedResponse = true;
             var getRequestBodyFunc = res.getBody;
             res.getBody = function(cb) {      
               getRequestBodyFunc.call(res, function(error, body){
+                res._deflatedResponse = false;
                 if(!body) {
                     cb(null, body)
                 }
@@ -106,7 +107,6 @@ var zipPackage = module.exports = function(argo) {
           if(acceptEncoding && acceptEncoding.indexOf("gzip") !== -1) {
             if (r._deflatedResponse) {
               r.getBody(function(error, body){
-
                 if(error) {
                   console.log(error);
                   r.statusCode = 500;

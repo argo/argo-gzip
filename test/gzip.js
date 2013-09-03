@@ -152,17 +152,21 @@ describe("argo-gzip", function(){
         .call(env);
     });
 
-    it('serves uncompressed responses without the header sent', function(done) {
+    it('serves compressed responses with the header sent', function(done) {
       var env = _getEnv();
       env.request = new Request();
-      env.request.setHeader("accept-encoding", "gzip");
+      env.request.headers = {}
+      env.request.headers["accept-encoding"] = "gzip";
       env.request.url = '/hello';
       env.request.method = 'GET';
       env.response = new Response();
 
+      var bodyString = "This is a test";
+
       env.response.end = function(body) {
-        assert.equal('application/json; charset=UTF-8', env.response.getHeader('Content-Type'));
-        assert.equal('{"hello":"World"}', body);
+        zlib.gzip(bodyString, function(_, result){
+           assert.equal(body.toString(), result.toString());
+        });
         done();
       };
 
@@ -171,7 +175,7 @@ describe("argo-gzip", function(){
         .get('/hello', function(handle) {
           handle('request', function(env, next) {
             env.response.statusCode = 200;
-            env.response.body = { hello: 'World' };
+            env.response.body = bodyString;
             next(env);
           });
         })
