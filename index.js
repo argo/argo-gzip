@@ -68,7 +68,7 @@ var zipPackage = module.exports = function(argo) {
                     cb(null, body)
                 }
 
-                if(!res.headers || "content-encoding" in res.headers) {
+                if(res.headers && "content-encoding" in res.headers) {
                   var encoding;
                   encoding = res.headers["content-encoding"]
                   if (encoding.indexOf('gzip') !== -1) {
@@ -104,6 +104,11 @@ var zipPackage = module.exports = function(argo) {
           } else {
             r = env.response;
           }
+
+          if(!env.response.headers) {
+            env.response.headers = {};
+          }
+
           var acceptEncoding = env.request.headers["accept-encoding"];
           if(acceptEncoding && acceptEncoding.indexOf("gzip") !== -1) {
             if (r._deflatedResponse) {

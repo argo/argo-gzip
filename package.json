@@ -1,6 +1,6 @@
 {
   "name": "argo-gzip",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Gzip package for Argo",
   "main": "index.js",
   "scripts": {
