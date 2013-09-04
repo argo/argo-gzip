@@ -2,7 +2,7 @@ var zlib = require('zlib'),
     argo = require('argo'),
     Stream = require('stream');
 
-var zipPackage = module.exports = function(argo) {
+var zipPackage = function(argo) {
   return {
     name:"gzip compression",
     install: function() {
@@ -178,3 +178,5 @@ var zipPackage = module.exports = function(argo) {
     }
   }
 }
+
+module.exports = {package: zipPackage};

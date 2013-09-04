@@ -55,7 +55,7 @@ function _getEnv() {
 describe("argo-gzip", function(){
 	it("has a name and install property", function(){
 		var server = argo();
-		var gzip_package = argo_gzip(server);
+		var gzip_package = argo_gzip.package(server);
 		assert.ok(gzip_package.name === "gzip compression");
 		assert.ok(gzip_package.install);
 	});
@@ -72,7 +72,7 @@ describe("argo-gzip", function(){
       _http.ServerResponse = Response;
       _http.Agent = function() {};
       argo(_http)
-      	.include({package:argo_gzip})
+      	.use(argo_gzip)
         .use(function(handle) {
           handle('response', function(env, next) {
           	env.response.headers["content-encoding"] = "gzip";
@@ -109,7 +109,7 @@ describe("argo-gzip", function(){
         var stringToZip = "This is a test string";
 
         argo(_http)
-          .include({package:argo_gzip})
+          .use(argo_gzip)
           .target("http://test.com")
           .use(function(handle) {
             handle('response', function(env, next) {
@@ -142,7 +142,7 @@ describe("argo-gzip", function(){
       };
 
       argo()
-        .include({package:argo_gzip})
+        .use(argo_gzip)
         .get('/hello', function(handle) {
           handle('request', function(env, next) {
             env.response.statusCode = 200;
@@ -173,7 +173,7 @@ describe("argo-gzip", function(){
       };
 
       argo()
-        .include({package:argo_gzip})
+        .use(argo_gzip)
         .get('/hello', function(handle) {
           handle('request', function(env, next) {
             env.response.statusCode = 200;
@@ -204,7 +204,7 @@ describe("argo-gzip", function(){
       };
 
       argo()
-        .include({package:argo_gzip})
+        .use(argo_gzip)
         .get('/hello', function(handle) {
           handle('request', function(env, next) {
             env.response.statusCode = 200;
@@ -247,7 +247,7 @@ describe("argo-gzip", function(){
       };
 
       argo()
-        .include({package:argo_gzip})
+        .use(argo_gzip)
         .get('/hello', function(handle) {
           handle('request', function(env, next) {
             env.response.statusCode = 200;
