@@ -3,6 +3,7 @@ var assert = require("assert"),
 	util = require("util"),
 	argo = require("argo"),
 	zlib = require("zlib"),
+  fs = require("fs"),
 	argo_gzip = require("../");
 
 //Mocks
@@ -152,7 +153,7 @@ describe("argo-gzip", function(){
         .call(env);
     });
 
-    it('serves compressed responses with the header sent', function(done) {
+    it('serves compressed response strings with the header sent', function(done) {
       var env = _getEnv();
       env.request = new Request();
       env.request.headers = {}
@@ -165,9 +166,81 @@ describe("argo-gzip", function(){
 
       env.response.end = function(body) {
         zlib.gzip(bodyString, function(_, result){
-           assert.equal(body.toString(), result.toString());
+          assert.equal(body, result);
+          done();
         });
-        done();
+      };
+
+      argo()
+        .include({package:argo_gzip})
+        .get('/hello', function(handle) {
+          handle('request', function(env, next) {
+            env.response.statusCode = 200;
+            env.response.body = bodyString;
+            next(env);
+          });
+        })
+        .call(env);
+    });
+
+    it('serves compressed response objects with the header sent', function(done) {
+      var env = _getEnv();
+      env.request = new Request();
+      env.request.headers = {}
+      env.request.headers["accept-encoding"] = "gzip";
+      env.request.url = '/hello';
+      env.request.method = 'GET';
+      env.response = new Response();
+
+      var bodyString = {"msg":"This is a test"};
+
+      env.response.end = function(body) {
+        zlib.gzip(JSON.stringify(bodyString), function(_, result){
+          assert.equal(body, result);
+          done();
+        });
+      };
+
+      argo()
+        .include({package:argo_gzip})
+        .get('/hello', function(handle) {
+          handle('request', function(env, next) {
+            env.response.statusCode = 200;
+            env.response.body = bodyString;
+            next(env);
+          });
+        })
+        .call(env);
+    });
+
+     it('serves compressed response streams with the header sent', function(done) {
+      var env = _getEnv();
+      env.request = new Request();
+      env.request.headers = {}
+      env.request.headers["accept-encoding"] = "gzip";
+      env.request.url = '/hello';
+      env.request.method = 'GET';
+      env.response = new Response();
+
+      var bodyString = fs.createReadStream("./test/test.txt");
+
+      env.response.end = function(body) {
+        var gzip = zlib.createGzip();
+        var buf = [];
+        var testStream = fs.createReadStream("./test/test.txt");
+        testStream.pipe(gzip);
+        gzip
+         .on('data', function(data){
+          buf.push(data)
+         })
+         .on('end', function(){
+          var testStr = buf.join("");
+          assert.equal(body, testStr);
+          done();
+         })
+         .on('error', function(e){
+          done();
+         });
       };
 
       argo()

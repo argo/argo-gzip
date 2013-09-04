@@ -1,5 +1,6 @@
 var zlib = require('zlib'),
-    argo = require('argo');
+    argo = require('argo'),
+    Stream = require('stream');
 
 var zipPackage = module.exports = function(argo) {
   return {
@@ -113,16 +114,48 @@ var zipPackage = module.exports = function(argo) {
                   r.body = error;
                   next(env);
                 } else {
-                  zlib.gzip(body, function(error, zippedBuffer){
-                    if(error) {
-                      r.statusCode = 500;
-                      r.body = error;
-                      next(env);
-                    } else {
-                      env.response.body = zippedBuffer.toString();
-                      next(env);
-                    }
-                  }); 
+                  if (typeof body === 'string') {
+                    zlib.gzip(body, function(error, zippedBuffer){
+                      if(error) {
+                        r.statusCode = 500;
+                        r.body = error;
+                        next(env);
+                      } else {
+                        env.response.body = zippedBuffer.toString();
+                        next(env);
+                      }
+                    });
+                  } else if (body instanceof Stream) {
+                    var buf = [];
+                    var gzip = zlib.createGzip();
+                    body.pipe(gzip);
+                    gzip
+                      .on("data",function(data){
+                        buf.push(data);
+                      })
+                      .on("end",function(){
+                        var gzippedStream = buf.join("");
+                        env.response.body = gzippedStream;
+                        next(env);
+                      })
+                      .on("error",function(error){
+                        r.statusCode = 500;
+                        r.body = error;
+                        next(env);
+                      });
+                  } else if (typeof body === 'object') {
+                    body = JSON.stringify(body);
+                    zlib.gzip(body, function(error, zippedBuffer){
+                      if(error) {
+                        r.statusCode = 500;
+                        r.body = error;
+                        next(env);
+                      } else {
+                        env.response.body = zippedBuffer.toString();
+                        next(env);
+                      }
+                    });
+                  } 
                 }
               });
             } else {
