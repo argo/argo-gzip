@@ -127,7 +127,7 @@ var zipPackage = function(argo) {
                         next(env);
                       } else {
                         env.response.headers['Content-Encoding'] = 'gzip';
-                        env.response.body = zippedBuffer.toString();
+                        env.response.body = zippedBuffer;
                         next(env);
                       }
                     });
@@ -152,6 +152,9 @@ var zipPackage = function(argo) {
                       });
                   } else if (typeof body === 'object') {
                     body = JSON.stringify(body);
+                    if(!env.response.getHeader("Content-Type")){
+                      env.response.setHeader("Content-Type", "application/json; charset=UTF-8");
+                    }
                     zlib.gzip(body, function(error, zippedBuffer){
                       if(error) {
                         r.statusCode = 500;
@@ -159,7 +162,7 @@ var zipPackage = function(argo) {
                         next(env);
                       } else {
                         env.response.headers['Content-Encoding'] = 'gzip';
-                        env.response.body = zippedBuffer.toString();
+                        env.response.body = zippedBuffer;
                         next(env);
                       }
                     });
