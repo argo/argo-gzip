@@ -68,7 +68,7 @@ var zipPackage = module.exports = function(argo) {
                     cb(null, body)
                 }
 
-                if("content-encoding" in res.headers) {
+                if(!res.headers || "content-encoding" in res.headers) {
                   var encoding;
                   encoding = res.headers["content-encoding"]
                   if (encoding.indexOf('gzip') !== -1) {
