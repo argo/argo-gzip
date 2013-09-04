@@ -121,6 +121,7 @@ var zipPackage = module.exports = function(argo) {
                         r.body = error;
                         next(env);
                       } else {
+                        env.response.headers['Content-Encoding'] = 'gzip';
                         env.response.body = zippedBuffer.toString();
                         next(env);
                       }
@@ -135,6 +136,7 @@ var zipPackage = module.exports = function(argo) {
                       })
                       .on("end",function(){
                         var gzippedStream = buf.join("");
+                        env.response.headers['Content-Encoding'] = 'gzip';
                         env.response.body = gzippedStream;
                         next(env);
                       })
@@ -151,6 +153,7 @@ var zipPackage = module.exports = function(argo) {
                         r.body = error;
                         next(env);
                       } else {
+                        env.response.headers['Content-Encoding'] = 'gzip';
                         env.response.body = zippedBuffer.toString();
                         next(env);
                       }

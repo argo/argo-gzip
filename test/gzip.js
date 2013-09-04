@@ -166,6 +166,7 @@ describe("argo-gzip", function(){
 
       env.response.end = function(body) {
         zlib.gzip(bodyString, function(_, result){
+          assert.equal('gzip', env.response.getHeader('Content-Encoding'));
           assert.equal(body, result);
           done();
         });
@@ -195,6 +196,7 @@ describe("argo-gzip", function(){
       var bodyString = {"msg":"This is a test"};
 
       env.response.end = function(body) {
+        assert.equal('gzip', env.response.getHeader('Content-Encoding'));
         zlib.gzip(JSON.stringify(bodyString), function(_, result){
           assert.equal(body, result);
           done();
@@ -235,6 +237,7 @@ describe("argo-gzip", function(){
          })
          .on('end', function(){
           var testStr = buf.join("");
+          assert.equal('gzip', env.response.getHeader('Content-Encoding'));
           assert.equal(body, testStr);
           done();
          })
