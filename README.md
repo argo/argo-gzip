@@ -12,6 +12,6 @@ Usage.
 		.use({package:gzip})
 		.target("http://www.endpointAPI.com/");
 
-//Now all request that come in with a "Accept-Encoding:gzip" header will be zipped as a response.
-//All responses that are from the backend server that are gzipped are handled now as well.
+//Now all request that come in with a "Accept-Encoding:gzip" header will be zipped
+//All responses that are from the backend server that are gzipped are handled now as well
 ```
