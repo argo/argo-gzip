@@ -118,7 +118,9 @@ var zipPackage = function(argo) {
                   r.body = error;
                   next(env);
                 } else {
-                  if (typeof body === 'string') {
+                  if (body === null || body === undefined) {
+                    next(env);
+                  } else if (typeof body === 'string') {
                     zlib.gzip(body, function(error, zippedBuffer){
                       if(error) {
                         r.statusCode = 500;
