@@ -8,20 +8,41 @@ var assert = require("assert"),
 
 //Mocks
 
-function Request(){
-	this.headers = {};
-	Stream.call(this);
+function Request() {
+  this.headers = {};
+  this.chunks = [];
+  Stream.Duplex.call(this);
 }
-util.inherits(Request, Stream);
+util.inherits(Request, Stream.Duplex);
+
+Request.prototype._read = function(size) {
+  var chunk = this.chunks.length ? this.chunks.shift() : null;
+  this.push(chunk);
+};
+
+Request.prototype._write = function(chunk, encoding, callback) {
+  this.chunks.push(chunk);
+  callback();
+};
 
 function Response() {
   this.headers = {};
   this.statusCode = 0;
-  this.body = '';
-  this.writable = true;
-  Stream.call(this);
+  this.body = null;
+  this.chunks = [];
+  Stream.Duplex.call(this);
 }
-util.inherits(Response, Stream);
+util.inherits(Response, Stream.Duplex);
+
+Response.prototype._read = function(size) {
+  var chunk = this.chunks.length ? this.chunks.shift() : null;
+  this.push(chunk);
+};
+
+Response.prototype._write = function(chunk, encoding, callback) {
+  this.chunks.push(chunk);
+  callback();
+};
 
 Response.prototype.setHeader = function(k, v) {
   this.headers[k] = v;
@@ -39,7 +60,6 @@ Response.prototype.getHeader = function(k) {
 Response.prototype.end = function(b) {
   this.body = b;
 };
-
 
 function _getEnv() {
   return { 
@@ -71,7 +91,7 @@ describe("argo-gzip", function(){
       _http.IncomingMessage = Request;
       _http.ServerResponse = Response;
       _http.Agent = function() {};
-      argo(_http)
+      var app = argo(_http)
       	.use(argo_gzip)
         .use(function(handle) {
           handle('response', function(env, next) {
@@ -81,34 +101,31 @@ describe("argo-gzip", function(){
               	done();              
             });
           });
-        })
-        .call(env);
+        });
 
       zlib.gzip(stringToZip, function(_, result){
-      	env.response.emit('data', result);
-      	env.response.emit('end');
+        env.response.write(result);
+        env.response.end();
+        app.call(env);
       });
     });
 
     it('properly unzips a targeted response body', function(done){
     	  var env = _getEnv();
         env.target.response = new Response();
+        env.response = new Response();
         var _http = {};
         _http.IncomingMessage = Request;
         _http.ServerResponse = Response;
         _http.Agent = function() {};
         _http.request = function(options, callback) {
-          var res = new Response();
-          callback(res);
-          return {
-            write: function() {},
-            end: function() {},
-            on: function() {}
-          };
+          callback(env.target.response);
+          return env.target.response;
         };
+
         var stringToZip = "This is a test string";
 
-        argo(_http)
+        var app = argo(_http)
           .use(argo_gzip)
           .target("http://test.com")
           .use(function(handle) {
@@ -119,13 +136,14 @@ describe("argo-gzip", function(){
                 done();
               });
             });
-          })
-          .call(env);
+          });
 
         zlib.gzip(stringToZip, function(_, result){
-  	      env.target.response.emit('data', result);
-  	      env.target.response.emit('end');
+          env.target.response.write(result);
+          env.target.response.end();
+          app.call(env);
   	    });
+
     });
 
     it('serves uncompressed responses without the header sent', function(done) {
@@ -225,34 +243,50 @@ describe("argo-gzip", function(){
       env.request.method = 'GET';
       env.response = new Response();
 
-      var bodyString = fs.createReadStream("./test/test.txt");
-
-      env.response.end = function(body) {
-        var gzip = zlib.createGzip();
-        var buf = [];
-        var testStream = fs.createReadStream("./test/test.txt");
-        testStream.pipe(gzip);
-        gzip
-         .on('data', function(data){
-          buf.push(data)
-         })
-         .on('end', function(){
-          var testStr = buf.join("");
-          assert.equal('gzip', env.response.getHeader('Content-Encoding'));
-          assert.equal(body.toString(), testStr.toString());
-          done();
-         })
-         .on('error', function(e){
-          done();
-         });
-      };
+      var bodyStream = fs.createReadStream("./test/test.txt");
 
       argo()
         .use(argo_gzip)
+        .use(function(handle) {
+          handle('response', { affinity: 'sink' }, function(env, next) {
+            assert.equal('gzip', env.response.getHeader('Content-Encoding'));
+
+            var gzip = zlib.createGzip();
+            var testStream = fs.createReadStream("./test/test.txt");
+
+            var assertStream = new Stream.Writable();
+            var buf = [];
+            assertStream._write = function(chunk, encoding, callback) {
+              buf.push(chunk);
+              callback();
+            }
+            
+            var assertStream2 = new Stream.Writable();
+            var buf2 = [];
+            assertStream2._write = function(chunk, encoding, callback) {
+              buf2.push(chunk);
+              callback();
+            }
+
+            assertStream.on('finish', function() {
+              var testStr = buf.join("");
+
+              assertStream2.on('finish', function() {
+                var bodyStr = buf2.join("");
+                assert.equal(bodyStr.toString(), testStr.toString());
+                done();
+              });
+
+              env.response.body.pipe(assertStream2);
+            });
+
+            testStream.pipe(gzip).pipe(assertStream);
+          });
+        })
         .get('/hello', function(handle) {
           handle('request', function(env, next) {
             env.response.statusCode = 200;
-            env.response.body = bodyString;
+            env.response.body = bodyStream;
             next(env);
           });
         })

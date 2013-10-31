@@ -114,7 +114,6 @@ var zipPackage = function(argo) {
             if (r._deflatedResponse) {
               r.getBody(function(error, body){
                 if(error) {
-                  console.log(error);
                   r.statusCode = 500;
                   r.body = error;
                   next(env);
@@ -132,17 +131,11 @@ var zipPackage = function(argo) {
                       }
                     });
                   } else if (body instanceof Stream) {
-                    var buf = [];
                     var gzip = zlib.createGzip();
-                    body.pipe(gzip);
                     gzip
-                      .on("data",function(data){
-                        buf.push(data);
-                      })
-                      .on("end",function(){
-                        var gzippedStream = buf.join("");
+                      .on("finish",function(){
                         env.response.headers['Content-Encoding'] = 'gzip';
-                        env.response.body = gzippedStream;
+                        env.response.body = gzip;
                         next(env);
                       })
                       .on("error",function(error){
@@ -150,6 +143,8 @@ var zipPackage = function(argo) {
                         r.body = error;
                         next(env);
                       });
+
+                    body.pipe(gzip);
                   } else if (typeof body === 'object') {
                     body = JSON.stringify(body);
                     if(!env.response.getHeader("Content-Type")){
