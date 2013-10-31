@@ -21,7 +21,7 @@ var zipPackage = function(argo) {
               
               getRequestBodyFunc.call(this, function(error, body){
                 if(!body) {
-                    cb(null, body)
+                    return cb(null, body)
                 }
 
                 if("content-encoding" in self.headers) {
@@ -65,7 +65,7 @@ var zipPackage = function(argo) {
               getRequestBodyFunc.call(res, function(error, body){
                 res._deflatedResponse = false;
                 if(!body) {
-                    cb(null, body)
+                    return cb(null, body)
                 }
 
                 if(res.headers && "content-encoding" in res.headers) {
