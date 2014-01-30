@@ -13,7 +13,7 @@
     "http"
   ],
   "dependencies": {
-    "argo":"git://github.com/argo/argo.git"
+    "argo":"0.4.9"
   },
   "devDependencies": {
     "mocha": "~1.8.1"
